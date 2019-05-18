@@ -64,7 +64,7 @@ $location = Split-Path $PSCommandPath -Parent
 $Server=$env:computername
 $Domain=$env:userdomain
 
-# If no -RunEXE parameters, log error and quit.
+# If no -RunEXE parameters, quit.
 if (!($RunEXE)){Exit}	
 
 # Get and check credentials ($Credential) from user.
@@ -93,7 +93,7 @@ Do{
 	}
 } While(!$Authenticated)	
 
-$RunExeArg = "-File \\server\Share\RunGCrApp.ps1 -RunEXE `"$RunEXE`""
+$RunExeArg = "-File \\server\Share\RunAppUsingCred.ps1 -RunEXE `"$RunEXE`""
 
 # Run EXE with Credentials gathered
 if ($Credential)
