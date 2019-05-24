@@ -30,20 +30,6 @@ function PopupMsg($Msg,$PopupTitle,$Timeout,$Icon)
 }
 
 function Test-Credential {
-    <# 
-    .SYNOPSIS
-        Takes a PSCredential object and validates it against the domain (or local machine, or ADAM instance).
-
-    .PARAMETER cred
-        A PScredential object with the username/password you wish to test. Typically this is generated using the Get-Credential cmdlet. Accepts pipeline input.
-
-    .PARAMETER context
-        An optional parameter specifying what type of credential this is. Possible values are 'Domain','Machine',and 'ApplicationDirectory.' The default is 'Domain.'
-
-    .OUTPUTS
-        A boolean, indicating whether the credentials were successfully validated.
-
-    #>
     param(
         [parameter(Mandatory=$true,ValueFromPipeline=$true)]
         [System.Management.Automation.PSCredential]$credential,
@@ -61,6 +47,7 @@ function Test-Credential {
 
 ### Start ####
 $location = Split-Path $PSCommandPath -Parent
+Set-Location = $location
 $Server=$env:computername
 $Domain=$env:userdomain
 
@@ -96,26 +83,18 @@ Do{
 $RunExeArg = "-File \\server\Share\RunAppUsingCred.ps1 -RunEXE `"$RunEXE`""
 
 # Run EXE with Credentials gathered
-if ($Credential)
-{	
-	$InCheckedGroup = $false	# Initialize
-	
-	# & X:\Apps\Wait.exe  # Please wait message	
-	
-	if ($CheckGroup){
-		#$InGroups = (Get-ADPrincipalGroupMembership $UserID).sAMAccountName
-		# Get-Aduser is more reliable. Get-ADPrincipalGroupmembership fails in certain situations.
-		$InGroups = ((Get-ADUser $UserID -Properties MemberOf).MemberOf | %{[adsi]"GC://$_"}).SamAccountName
-		if ($InGroups -Contains $CheckGroup){$InCheckedGroup = $true}
-	}
-	else {$InCheckedGroup = $null}
+$InCheckedGroup = $false	# Initialize
+if ($CheckGroup){
+	#$InGroups = (Get-ADPrincipalGroupMembership $UserID).sAMAccountName
+	# Get-Aduser is more reliable. Get-ADPrincipalGroupmembership fails in certain situations.
+	$InGroups = ((Get-ADUser $UserID -Properties MemberOf).MemberOf | %{[adsi]"GC://$_"}).SamAccountName
+	if ($InGroups -Contains $CheckGroup){$InCheckedGroup = $true}
+}
+else {$InCheckedGroup = $null}
 		
-	if (($InCheckedGroup -eq $true) -or ($InCheckedGroup -eq $null)){
-		Start-Process Powershell.exe $RunExeArg -Credential $Credential -WindowStyle Hidden
-	}
-	else
-	{
-		PopupMsg "You are not authorized to launch this application. Call your HelpDesk for assistance." "ERROR: Not in $CheckGroup Group" 30 16
-		$UserID = $UserID + "-NotInGroup-" + $CheckGroup
-	}
+if (($InCheckedGroup -eq $true) -or ($InCheckedGroup -eq $null)){
+	Start-Process Powershell.exe $RunExeArg -Credential $Credential -WindowStyle Hidden
+}
+else{
+PopupMsg "You are not authorized to launch this application. Call your HelpDesk for assistance." "ERROR: Not in $CheckGroup Group" 30 16
 }
