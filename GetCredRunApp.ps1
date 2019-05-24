@@ -103,7 +103,9 @@ if ($Credential)
 	# & X:\Apps\Wait.exe  # Please wait message	
 	
 	if ($CheckGroup){
-		$InGroups = (Get-ADPrincipalGroupMembership $UserID).sAMAccountName
+		#$InGroups = (Get-ADPrincipalGroupMembership $UserID).sAMAccountName
+		# Get-Aduser is more reliable. Get-ADPrincipalGroupmembership fails in certain situations.
+		$InGroups = ((Get-ADUser $UserID -Properties MemberOf).MemberOf | %{[adsi]"GC://$_"}).SamAccountName
 		if ($InGroups -Contains $CheckGroup){$InCheckedGroup = $true}
 	}
 	else {$InCheckedGroup = $null}
