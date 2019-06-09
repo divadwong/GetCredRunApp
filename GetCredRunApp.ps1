@@ -90,9 +90,9 @@ if ($CheckGroup){
 	$InGroups = ((Get-ADUser $UserID -Properties MemberOf).MemberOf | %{[adsi]"GC://$_"}).SamAccountName
 	if ($InGroups -Contains $CheckGroup){$InCheckedGroup = $true}
 }
-else {$InCheckedGroup = $null}
+else {$InCheckedGroup = $true}
 		
-if (($InCheckedGroup -eq $true) -or ($InCheckedGroup -eq $null)){
+if ($InCheckedGroup){
 	Start-Process Powershell.exe $RunExeArg -Credential $Credential -WindowStyle Hidden
 }
 else{
